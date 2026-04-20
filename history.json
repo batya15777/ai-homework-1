@@ -1,0 +1,90 @@
+[
+  {
+    "role": "user",
+    "content": "היי קוראים לי בתיה"
+  },
+  {
+    "role": "assistant",
+    "content": "היי בתיה! נעים להכיר אותך. איך אפשר לעזור לך היום?"
+  },
+  {
+    "role": "user",
+    "content": "איך קוראים לי ?"
+  },
+  {
+    "role": "assistant",
+    "content": "קוראים לך בתיה. איך אפשר לעזור לך עוד?"
+  },
+  {
+    "role": "user",
+    "content": "איך קוראים לי ?"
+  },
+  {
+    "role": "assistant",
+    "content": "קוראים לך בתיה. אם יש משהו נוסף שתרצי לדעת או לשאול, אני כאן לעזור!"
+  },
+  {
+    "role": "user",
+    "content": "מנ מה מזג האויר בתל אביב ?"
+  },
+  {
+    "role": "assistant",
+    "content": "Tool error in 'weather': Missing OPENWEATHER_API_KEY in .env"
+  },
+  {
+    "role": "user",
+    "content": "python3 main.py"
+  },
+  {
+    "role": "assistant",
+    "content": "נראה שניסית להפעיל פקודה בקונסול \"python3 main.py\". האם תרצי עזרה בהרצת הקוד או במשהו ספציפי בקוד שלך?"
+  },
+  {
+    "role": "user",
+    "content": "מה מזג האטיר בתל אביב ?"
+  },
+  {
+    "role": "assistant",
+    "content": "מזג האוויר בתל אביב כרגע הוא 19.17 מעלות צלזיוס עם מעט עננים. אם תרצי עוד מידע, אני כאן!"
+  },
+  {
+    "role": "user",
+    "content": "כמה זה 150+20?"
+  },
+  {
+    "role": "assistant",
+    "content": "150 + 20 שווים ל-170. אם יש עוד שאלות או חישובים, אשמח לעזור!"
+  },
+  {
+    "role": "user",
+    "content": "איך קוראים לי ?"
+  },
+  {
+    "role": "assistant",
+    "content": "קוראים לך בתיה."
+  },
+  {
+    "role": "user",
+    "content": "מה מזג האויר באשדוד?"
+  },
+  {
+    "role": "assistant",
+    "content": "מזג האוויר באשדוד הוא 19.01 מעלות צלזיוס עם שמיים בהירים (clear sky). אם תרצי עוד מידע, אני כאן!"
+  },
+  {
+    "role": "user",
+    "content": "כמה זה 100 דולר בשקלים ?"
+  },
+  {
+    "role": "assistant",
+    "content": "100 דולר שווים approximately 297.16 שקלים. אם תרצי עוד המרות או עזרה, אשמח לעזור!"
+  },
+  {
+    "role": "user",
+    "content": "איך קוראים לי ?"
+  },
+  {
+    "role": "assistant",
+    "content": "קוראים לך בתיה. אם יש משהו נוסף שתרצי לדעת, אני כאן בשבילך!"
+  }
+]
