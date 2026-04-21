@@ -123,9 +123,13 @@ def generalChat(
 
     tool_blob = json.dumps(toolResults, ensure_ascii=False)
     system = (
-        "You are a helpful assistant.\n"
-        "You may use the provided tool results to answer.\n"
-        "If tool results are missing for something the user asked, say what is missing."
+        "You MUST use the tool results.\n"
+        "DO NOT perform calculations yourself.\n"
+        "DO NOT explain steps.\n"
+        "Answer in Hebrew.\n"
+        "Be קצר ומדויק בלבד.\n"
+        "Never use phrases like: \"כדי לחשב\", \"אז:\", \"כלומר\".\n"
+        "Respond briefly and directly using the results."
     )
 
     cleaned_context = list(context)
@@ -163,14 +167,22 @@ def tool_weather(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dic
     city = str(tool_input).strip()
     result = getWeather(city)
     scratch.setdefault("weather", {})[city] = result["temp_c"]
-    return result
+    temp = int(round(float(result["temp_c"])))
+    desc_map = {
+        "scattered clouds": "מעונן חלקית",
+        "clear sky": "שמיים בהירים",
+        "few clouds": "מעט עננים",
+        "broken clouds": "עננים מפוזרים",
+    }
+    desc = desc_map.get(result["description"], result["description"])
+    return f"ב{city} יש {temp} מעלות, {desc}."
 
 
 def tool_exchange(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dict[str, Any]) -> ToolResult:
     code = str(tool_input).strip().upper()
     result = getExchangeRate(code)
     scratch.setdefault("exchange", {})[code] = result["ils_per_unit"]
-    return result
+    return f"שער {code} הוא {float(result['ils_per_unit']):.2f} ש\"ח"
 
 
 def tool_math(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dict[str, Any]) -> ToolResult:
@@ -178,12 +190,24 @@ def tool_math(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dict[s
     substituted = _substitute_tokens(expr, scratch)
     result = calculateMath(substituted)
     scratch.setdefault("math", []).append(result)
-    return result
+    num = float(result["result"])
+    s = f"{num:.2f}"
+    s = s.rstrip("0").rstrip(".")
+    return s
 
 
 def tool_chat(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dict[str, Any]) -> ToolResult:
     user_input = str(tool_input)
+    if scratch.get("math"):
+        num = float(scratch["math"][-1]["result"])
+        s = f"{num:.2f}"
+        s = s.rstrip("0").rstrip(".")
+        return s
     tool_results = scratch.get("_results", [])
+    if isinstance(tool_results, list) and tool_results:
+        last = tool_results[-1]
+        if isinstance(last, dict) and "output" in last:
+            return str(last["output"])
     if not isinstance(tool_results, list):
         tool_results = []
     return generalChat(context=history, userInput=user_input, toolResults=tool_results)
