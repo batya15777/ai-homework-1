@@ -16,7 +16,7 @@ def _load_history() -> list[dict[str, str]]:
     try:
         data = json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
         if isinstance(data, list):
-            print("ברוך שובך")
+            print("Welcome back!")
             return [m for m in data if isinstance(m, dict)]
     except Exception:
         pass
