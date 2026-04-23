@@ -123,13 +123,11 @@ def generalChat(
 
     tool_blob = json.dumps(toolResults, ensure_ascii=False)
     system = (
-        "You MUST use the tool results.\n"
-        "DO NOT perform calculations yourself.\n"
-        "DO NOT explain steps.\n"
-        "Answer in Hebrew.\n"
-        "Be קצר ומדויק בלבד.\n"
-        "Never use phrases like: \"כדי לחשב\", \"אז:\", \"כלומר\".\n"
-        "Respond briefly and directly using the results."
+        "ענה בעברית, קצר וטבעי.\n"
+        "אל תבצע חישובים בעצמך.\n"
+        "אל תסביר שלבים.\n"
+        "אם חסרים נתונים, אמור זאת בקצרה.\n"
+        "אל תשתמש בניסוחים כמו: \"כדי לחשב\", \"אז\", \"כלומר\"."
     )
 
     cleaned_context = list(context)
@@ -164,8 +162,12 @@ def _substitute_tokens(expression: str, scratch: Dict[str, Any]) -> str:
 
 
 def tool_weather(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dict[str, Any]) -> ToolResult:
-    city = str(tool_input).strip()
-    result = getWeather(city)
+    city_raw = str(tool_input)
+    city = " ".join(city_raw.strip().split()).title()
+    try:
+        result = getWeather(city)
+    except Exception:
+        return "לא ניתן להביא נתוני מזג אוויר כרגע."
     scratch.setdefault("weather", {})[city] = result["temp_c"]
     temp = int(round(float(result["temp_c"])))
     desc_map = {
@@ -173,8 +175,19 @@ def tool_weather(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dic
         "clear sky": "שמיים בהירים",
         "few clouds": "מעט עננים",
         "broken clouds": "עננים מפוזרים",
+        "overcast clouds": "מעונן",
+        "light rain": "גשם קל",
+        "moderate rain": "גשם",
+        "heavy intensity rain": "גשם חזק",
+        "thunderstorm": "סופת רעמים",
+        "mist": "ערפל",
+        "haze": "אובך",
+        "fog": "ערפל",
     }
-    desc = desc_map.get(result["description"], result["description"])
+    raw_desc = str(result.get("description", "")).strip()
+    desc = desc_map.get(raw_desc, raw_desc)
+    if any("a" <= ch.lower() <= "z" for ch in desc):
+        desc = "מעונן"
     return f"ב{city} יש {temp} מעלות, {desc}."
 
 
@@ -182,7 +195,9 @@ def tool_exchange(*, history: List[Dict[str, str]], tool_input: Any, scratch: Di
     code = str(tool_input).strip().upper()
     result = getExchangeRate(code)
     scratch.setdefault("exchange", {})[code] = result["ils_per_unit"]
-    return f"שער {code} הוא {float(result['ils_per_unit']):.2f} ש\"ח"
+    rate = float(result["ils_per_unit"])
+    s = f"{rate:.2f}".rstrip("0").rstrip(".")
+    return f"שער {code} הוא {s} ש\"ח"
 
 
 def tool_math(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dict[str, Any]) -> ToolResult:
@@ -203,6 +218,44 @@ def tool_chat(*, history: List[Dict[str, str]], tool_input: Any, scratch: Dict[s
         s = f"{num:.2f}"
         s = s.rstrip("0").rstrip(".")
         return s
+
+    text = user_input.strip()
+    text_cf = text.casefold()
+
+    is_name_q = any(q in text_cf for q in ["איך קוראים לי", "מה השם שלי", "what is my name"])
+    is_loc_q = any(q in text_cf for q in ["איפה אני גרה", "איפה אני גר", "where do i live"])
+    is_study_q = any(q in text_cf for q in ["מה אני לומדת", "מה אני לומד", "what do i study"])
+
+    if is_name_q or is_loc_q or is_study_q:
+        for msg in reversed(history):
+            if not isinstance(msg, dict) or msg.get("role") != "user":
+                continue
+            content = str(msg.get("content", ""))
+            c_cf = content.casefold()
+
+            if is_name_q:
+                for prefix in ["קוראים לי ", "השם שלי הוא ", "my name is "]:
+                    idx = c_cf.find(prefix)
+                    if idx != -1:
+                        val = content[idx + len(prefix):].split('.')[0].split('!')[0].split('?')[0].split('\n')[0].strip()
+                        if val: return f"השם שלך הוא {val}."
+            
+            if is_loc_q:
+                for prefix in ["אני גרה ב", "אני גר ב", "i live in "]:
+                    idx = c_cf.find(prefix)
+                    if idx != -1:
+                        val = content[idx + len(prefix):].split('.')[0].split('!')[0].split('?')[0].split('\n')[0].strip()
+                        if val: return f"את גרה ב{val}."
+
+            if is_study_q:
+                for prefix in ["אני לומדת ", "אני לומד ", "i study "]:
+                    idx = c_cf.find(prefix)
+                    if idx != -1:
+                        val = content[idx + len(prefix):].split('.')[0].split('!')[0].split('?')[0].split('\n')[0].strip()
+                        if val: return f"את לומדת {val}."
+
+        return "אין לי מידע על זה."
+
     tool_results = scratch.get("_results", [])
     if isinstance(tool_results, list) and tool_results:
         last = tool_results[-1]

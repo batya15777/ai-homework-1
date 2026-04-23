@@ -16,8 +16,10 @@ def _load_history() -> list[dict[str, str]]:
     try:
         data = json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
         if isinstance(data, list):
-            print("Welcome back!")
-            return [m for m in data if isinstance(m, dict)]
+            print("ברוך שובך")
+            return [
+                m for m in data if isinstance(m, dict) and m.get("role") in {"user", "assistant", "system"}
+            ]
     except Exception:
         pass
     return []
@@ -47,7 +49,7 @@ def main() -> None:
 
         if user_question == "/reset":
             messages = _reset_history()
-            print("History reset.")
+            print("שיחה חדשה התחילה.")
             continue
 
         messages.append({"role": "user", "content": user_question})
@@ -78,6 +80,12 @@ def main() -> None:
                 scratch_results = scratch.get("_results")
                 if isinstance(scratch_results, list):
                     scratch_results.append({"tool": tool_name, "input": tool_input, "output": result})
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": f"[TOOL {tool_name}] input={tool_input} output={result}",
+                    }
+                )
 
             if tool_name == "chat":
                 assistant_text = str(result)

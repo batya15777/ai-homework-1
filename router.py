@@ -34,7 +34,11 @@ Rules:
 - Output format MUST be: {"steps": [{"tool": "...", "input": ...}, ...]}
 - The final step MUST always be {"tool":"chat","input":"<original user question>"}.
 - Do NOT answer the question. Do NOT calculate anything.
-- For multi-step queries, include all required tool calls before the final chat.
+- For any query that requires data, you MUST decompose it into sub-queries:
+  - Each required data source MUST be its own tool call.
+  - NEVER skip tool steps. NEVER answer directly.
+  - Currency conversions MUST call exchange for BOTH currencies, then math.
+  - Comparisons between two cities MUST call weather for EACH city, then math.
 
 Token rules for building math expressions:
 - You may reference prior tool outputs using tokens that will be substituted later:
@@ -47,6 +51,16 @@ Token rules for building math expressions:
   steps: weather Dubai, weather Stockholm, math "({{weather:Dubai}} / {{weather:Stockholm}})", chat
 
 If ambiguous or not needing tools, plan only the final chat step.
+
+Hebrew examples (always plan tool calls, never answer directly):
+- "כמה חם בתל אביב?"
+  steps: weather "Tel Aviv", chat
+- "כמה זה דולר בשקלים?"
+  steps: exchange "USD", chat
+- "כמה Euro אפשר לקנות ב־100 דולר?"
+  steps: exchange "USD", exchange "EUR", math "100 * ({{exchange:USD}} / {{exchange:EUR}})", chat
+- "פי כמה מזג האוויר חם בדובאי מאשר בשטוקהולם?"
+  steps: weather "Dubai", weather "Stockholm", math "({{weather:Dubai}} / {{weather:Stockholm}})", chat
 """
 
 
